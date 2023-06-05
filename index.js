@@ -65,10 +65,10 @@ app.post('/sms', async (req, res) => {
         to: req.body.From,
       });
 
-      // for (let i = 0; i < totalChunks; i++) {
-      //   const start = i * 1600;
-      //   const end = start + 1600;
-      //   const chunk = modelResponse?.substring(start, end);
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * 1600;
+        const end = start + 1600;
+        const chunk = modelResponse?.substring(start, end);
       //   console.log(chunk);
 
         await client.messages.create({
@@ -76,7 +76,7 @@ app.post('/sms', async (req, res) => {
           from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
           to: req.body.From,
         });
-      // }
+      }
     })
     .catch((error) => {
       displayError(error)
