@@ -52,13 +52,16 @@ module.exports = async (req, res) => {
       const end = start + 1600;
       const chunk = modelResponse?.substring(start, end);
       console.log('Chunk:', chunk);
-
-      await client.messages.create({
-        body: chunk,
-        from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-        to: From,
-      });
+    
+      await Promise.all([
+        client.messages.create({
+          body: chunk,
+          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+          to: From,
+        }),
+      ]);
     }
+    
 
     res.status(200).send('Success');
   } catch (error) {
