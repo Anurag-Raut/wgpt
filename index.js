@@ -9,7 +9,14 @@ const { Configuration, OpenAIApi } = require('openai');
 
 const { ocrSpace } = require('ocr-space-api-wrapper');
 
+async function displayError(error){
 
+  await client.messages.create({
+    body: error,
+    from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+    to: req.body.From,
+  });
+}
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -37,13 +44,7 @@ app.post('/sms', async (req, res) => {
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
         to: req.body.From,
       });
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  console.log(message);
-
-  openai
+      openai
     .createChatCompletion({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: message }],
@@ -66,8 +67,46 @@ app.post('/sms', async (req, res) => {
       }
     })
     .catch((error) => {
-      res.status(500).send('An error occurred');
+      displayError(error)
     });
+
+
+
+    } catch (error) {
+      displayError(error)
+    }
+  }
+  else{
+    openai
+    .createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: message }],
+    })
+    .then(async (completion) => {
+      const modelResponse = completion.data.choices[0].message.content;
+      const totalChunks = Math.ceil(modelResponse.length / 1600);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * 1600;
+        const end = start + 1600;
+        const chunk = modelResponse.substring(start, end);
+        console.log(chunk);
+
+        await client.messages.create({
+          body: chunk,
+          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+          to: req.body.From,
+        });
+      }
+    })
+    .catch((error) => {
+      displayError(error)
+    });
+
+  }
+  console.log(message);
+
+  
 });
 
 app.listen(3000, () => {
