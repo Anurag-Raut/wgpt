@@ -10,12 +10,12 @@ const { Configuration, OpenAIApi } = require('openai');
 const { ocrSpace } = require('ocr-space-api-wrapper');
 
 async function displayError(error){
-
-  await client?.messages?.create({
-    body: error,
-    from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-    to: req.body.From,
-  });
+  console.log(error);
+  // await client?.messages?.create({
+  //   body: error,
+  //   from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+  //   to: req.body.From,
+  // });
 }
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
