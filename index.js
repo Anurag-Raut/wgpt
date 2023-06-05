@@ -44,69 +44,40 @@ app.post('/sms', async (req, res) => {
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
         to: req.body.From,
       });
-      openai
-    .createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: message }],
-    })
-    .then(async (completion) => {
-      const modelResponse = completion.data.choices[0].message.content;
-      const totalChunks = Math.ceil(modelResponse.length / 1600);
-
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * 1600;
-        const end = start + 1600;
-        const chunk = modelResponse.substring(start, end);
-        console.log(chunk);
-
-        await client.messages.create({
-          body: chunk,
-          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-          to: req.body.From,
-        });
-      }
-    })
-    .catch((error) => {
-      displayError(error)
-    });
 
 
-
+      
     } catch (error) {
-      displayError(error)
+      console.error(error);
     }
-  }
-  else{
-    openai
-    .createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: message }],
-    })
-    .then(async (completion) => {
-      const modelResponse = completion.data.choices[0].message.content;
-      const totalChunks = Math.ceil(modelResponse.length / 1600);
-
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * 1600;
-        const end = start + 1600;
-        const chunk = modelResponse.substring(start, end);
-        console.log(chunk);
-
-        await client.messages.create({
-          body: chunk,
-          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-          to: req.body.From,
-        });
-      }
-    })
-    .catch((error) => {
-      displayError(error)
-    });
-
   }
   console.log(message);
 
-  
+  openai
+    .createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: message }],
+    })
+    .then(async (completion) => {
+      const modelResponse = completion.data.choices[0].message.content;
+      const totalChunks = Math.ceil(modelResponse.length / 1600);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * 1600;
+        const end = start + 1600;
+        const chunk = modelResponse.substring(start, end);
+        console.log(chunk);
+
+        await client.messages.create({
+          body: chunk,
+          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+          to: req.body.From,
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500).send('An error occurred');
+    });
 });
 
 app.listen(3000, () => {
