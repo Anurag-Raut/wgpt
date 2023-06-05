@@ -32,6 +32,11 @@ app.post('/sms', async (req, res) => {
     try {
       const a = await ocrSpace(mediaUrl, { apiKey: process.env.OCR_SPACE_API_KEY });
       message = a.ParsedResults[0].ParsedText;
+      await client.messages.create({
+        body: message,
+        from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+        to: req.body.From,
+      });
     } catch (error) {
       console.error(error);
     }
