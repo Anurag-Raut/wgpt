@@ -9,14 +9,15 @@ const { Configuration, OpenAIApi } = require('openai');
 
 const { ocrSpace } = require('ocr-space-api-wrapper');
 
-async function displayError(error){
-
+async function displayError(error) {
+  console.error(error);
   await client?.messages?.create({
     body: error,
     from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
     to: req.body.From,
   });
 }
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -31,25 +32,26 @@ app.post('/sms', async (req, res) => {
   const twiml = new MessagingResponse();
 
   var message = req.body.Body;
-  console.log(req.body.From);
+  console.log('Incoming Message:', message);
+  console.log('From:', req.body.From);
 
   if (req?.body?.NumMedia > 0) {
     const mediaUrl = req.body.MediaUrl0;
-    console.log(mediaUrl);
+    console.log('Media URL:', mediaUrl);
     try {
       const a = await ocrSpace(mediaUrl, { apiKey: process.env.OCR_SPACE_API_KEY });
       message = a.ParsedResults[0].ParsedText;
+      console.log('OCR Result:', message);
+
       await client.messages.create({
         body: message,
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
         to: req.body.From,
       });
-      
     } catch (error) {
-      displayError(error)
+      displayError(error);
     }
   }
-  
 
   openai
     .createChatCompletion({
@@ -58,9 +60,12 @@ app.post('/sms', async (req, res) => {
     })
     .then(async (completion) => {
       const modelResponse = completion.data.choices[0].message.content;
+      console.log('Model Response:', modelResponse);
       const totalChunks = Math.ceil(modelResponse.length / 1600);
+      console.log('Total Chunks:', totalChunks);
+
       await client.messages.create({
-        body: modelResponse.length,
+        body: `${modelResponse.length}`,
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
         to: req.body.From,
       });
@@ -69,7 +74,7 @@ app.post('/sms', async (req, res) => {
         const start = i * 1600;
         const end = start + 1600;
         const chunk = modelResponse?.substring(start, end);
-        console.log(chunk);
+        console.log('Chunk:', chunk);
 
         await client.messages.create({
           body: chunk,
@@ -79,7 +84,7 @@ app.post('/sms', async (req, res) => {
       }
     })
     .catch((error) => {
-      displayError(error)
+      displayError(error);
     });
 });
 
