@@ -1,71 +1,91 @@
 require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
 const axios = require('axios');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 const { Configuration, OpenAIApi } = require('openai');
+
 const { ocrSpace } = require('ocr-space-api-wrapper');
 
+async function displayError(error){
+
+  await client?.messages?.create({
+    body: error,
+    from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+    to: req.body.From,
+  });
+}
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const { MessagingResponse } = require('twilio').twiml;
 const openai = new OpenAIApi(configuration);
+const app = express();
 
-module.exports = async (req, res) => {
-  try {
-    const { Body, From, NumMedia, MediaUrl0 } = req.body;
-    console.log('Incoming Message:', Body);
-    console.log('From:', From);
+app.use(bodyParser.urlencoded({ extended: false }));
 
-    if (NumMedia > 0) {
-      console.log('Media URL:', MediaUrl0);
-      const a = await ocrSpace(MediaUrl0, { apiKey: process.env.OCR_SPACE_API_KEY });
-      const message = a.ParsedResults[0].ParsedText;
-      console.log('OCR Result:', message);
+app.post('/sms', async (req, res) => {
+  const twiml = new MessagingResponse();
 
+  var message = req.body.Body;
+  console.log(req.body.From);
+
+  if (req?.body?.NumMedia > 0) {
+    const mediaUrl = req.body.MediaUrl0;
+    console.log(mediaUrl);
+    try {
+      const a = await ocrSpace(mediaUrl, { apiKey: process.env.OCR_SPACE_API_KEY });
+      message = a.ParsedResults[0].ParsedText;
       await client.messages.create({
         body: message,
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-        to: From,
+        to: req.body.From,
       });
+      
+    } catch (error) {
+      console.log(error)
+      displayError(error)
     }
-
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: Body }],
-    });
-
-    const modelResponse = completion.data.choices[0].message.content;
-    console.log('Model Response:', modelResponse);
-    const totalChunks = Math.ceil(modelResponse.length / 1600);
-    console.log('Total Chunks:', totalChunks);
-
-    await client.messages.create({
-      body: `${modelResponse.length}`,
-      from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-      to: From,
-    });
-
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * 1600;
-      const end = start + 1600;
-      const chunk = modelResponse?.substring(start, end);
-      console.log('Chunk:', chunk);
-    
-      await Promise.all([
-        client.messages.create({
-          body: chunk,
-          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-          to: From,
-        }),
-      ]);
-    }
-    
-
-    res.status(200).send('Success');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('An error occurred');
   }
-};
+  
+
+  openai
+    .createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: message }],
+    })
+    .then(async (completion) => {
+      const modelResponse = completion.data.choices[0].message.content;
+      const totalChunks = Math.ceil(modelResponse.length / 1600);
+      await client.messages.create({
+        body: `${modelResponse.length}`,
+        from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+        to: req.body.From,
+      });
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * 1600;
+        const end = start + 1600;
+        const chunk = modelResponse?.substring(start, end);
+        console.log('Chunk:', chunk);
+      
+        await Promise.all([
+          client.messages.create({
+            body: chunk,
+            from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+            to: From,
+          }),
+        ]);
+      }
+    })
+    .catch((error) => {
+      displayError(error)
+    });
+});
+
+app.listen(3000, () => {
+  console.log('WhatsApp bot server is running on port 3000');
+});
