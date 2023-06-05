@@ -11,7 +11,7 @@ const { ocrSpace } = require('ocr-space-api-wrapper');
 
 async function displayError(error){
 
-  await client.messages.create({
+  await client?.messages?.create({
     body: error,
     from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
     to: req.body.From,
@@ -33,7 +33,7 @@ app.post('/sms', async (req, res) => {
   var message = req.body.Body;
   console.log(req.body.From);
 
-  if (req.body.NumMedia > 0) {
+  if (req?.body?.NumMedia > 0) {
     const mediaUrl = req.body.MediaUrl0;
     console.log(mediaUrl);
     try {
@@ -46,10 +46,10 @@ app.post('/sms', async (req, res) => {
       });
       
     } catch (error) {
-      console.error(error);
+      displayError(error)
     }
   }
-  console.log(message);
+  
 
   openai
     .createChatCompletion({
@@ -63,7 +63,7 @@ app.post('/sms', async (req, res) => {
       for (let i = 0; i < totalChunks; i++) {
         const start = i * 1600;
         const end = start + 1600;
-        const chunk = modelResponse.substring(start, end);
+        const chunk = modelResponse?.substring(start, end);
         console.log(chunk);
 
         await client.messages.create({
@@ -74,7 +74,7 @@ app.post('/sms', async (req, res) => {
       }
     })
     .catch((error) => {
-      res.status(500).send('An error occurred');
+      displayError(error)
     });
 });
 
