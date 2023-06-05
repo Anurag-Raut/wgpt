@@ -46,7 +46,6 @@ app.post('/sms', async (req, res) => {
       });
       
     } catch (error) {
-      console.log(error)
       displayError(error)
     }
   }
@@ -66,20 +65,18 @@ app.post('/sms', async (req, res) => {
         to: req.body.From,
       });
 
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * 1600;
-        const end = start + 1600;
-        const chunk = modelResponse?.substring(start, end);
-        console.log('Chunk:', chunk);
-      
-        await Promise.all([
-          client.messages.create({
-            body: chunk,
-            from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-            to: From,
-          }),
-        ]);
-      }
+      // for (let i = 0; i < totalChunks; i++) {
+      //   const start = i * 1600;
+      //   const end = start + 1600;
+      //   const chunk = modelResponse?.substring(start, end);
+      //   console.log(chunk);
+
+        await client.messages.create({
+          body: modelResponse.substring(0,1500),
+          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+          to: req.body.From,
+        });
+      // }
     })
     .catch((error) => {
       displayError(error)
