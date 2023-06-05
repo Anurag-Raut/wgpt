@@ -58,7 +58,7 @@ app.post('/sms', async (req, res) => {
     })
     .then(async (completion) => {
       const modelResponse = completion.data.choices[0].message.content;
-      const totalChunks = Math.ceil(modelResponse.length / 1600);
+      const totalChunks = Math.ceil(modelResponse.length / 1500);
       await client.messages.create({
         body: `${modelResponse.length}`,
         from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
@@ -66,13 +66,13 @@ app.post('/sms', async (req, res) => {
       });
 
       for (let i = 0; i < totalChunks; i++) {
-        const start = i * 1600;
-        const end = start + 1600;
+        const start = i * 1500;
+        const end = start + 1500;
         const chunk = modelResponse?.substring(start, end);
       //   console.log(chunk);
 
         await client.messages.create({
-          body: modelResponse.substring(0,1500),
+          body: chunk,
           from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
           to: req.body.From,
         });
