@@ -11,11 +11,7 @@ const { ocrSpace } = require('ocr-space-api-wrapper');
 
 async function displayError(error){
   console.log(error);
-  // await client?.messages?.create({
-  //   body: error,
-  //   from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-  //   to: req.body.From,
-  // });
+  
 }
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -65,17 +61,20 @@ app.post('/sms', async (req, res) => {
         to: req.body.From,
       });
 
+     
       for (let i = 0; i < totalChunks; i++) {
         const start = i * 1500;
         const end = start + 1500;
         const chunk = modelResponse?.substring(start, end);
-      //   console.log(chunk);
-
-        await client.messages.create({
-          body: chunk,
-          from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-          to: req.body.From,
-        });
+      
+        Promise.all(
+          await client.messages.create({
+            body: chunk,
+            from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
+            to: req.body.From,
+          })
+        )
+        
       }
     })
     .catch((error) => {
