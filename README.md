@@ -5,6 +5,11 @@ A whatsapp js bot which uuses open AI api which responds with Chat gpt response 
 https://clipchamp.com/watch/J19DRGi6FIt
 
 
+https://github.com/Anurag-Raut/wgpt/assets/102049482/070324b4-5bf9-4275-aa2b-5aeb35d8e3f8
+
+
+
+
 ## setup
 to use this code add .env file with folowing structure-
 ```
