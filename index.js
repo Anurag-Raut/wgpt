@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const axios = require('axios');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
@@ -16,15 +15,13 @@ async function displayError(error){
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const { MessagingResponse } = require('twilio').twiml;
 const openai = new OpenAIApi(configuration);
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post('/sms', async (req, res) => {
-  const twiml = new MessagingResponse();
+  
 
   var message = req.body.Body;
   console.log(req.body.From);
@@ -55,13 +52,6 @@ app.post('/sms', async (req, res) => {
     .then(async (completion) => {
       const modelResponse = completion.data.choices[0].message.content;
       const totalChunks = Math.ceil(modelResponse.length / 1500);
-      await client.messages.create({
-        body: `${modelResponse.length}`,
-        from: 'whatsapp:' + process.env.TWILIO_PHONE_NUMBER,
-        to: req.body.From,
-      });
-
-     
       for (let i = 0; i < totalChunks; i++) {
         const start = i * 1500;
         const end = start + 1500;
