@@ -1,5 +1,8 @@
 # wgpt
-A whatsapp js bot which uuses open AI api which responds with Chat gpt response .
+A whatsapp js bot which uses open AI api which responds with Chat gpt response .
+used twiio for interacting with whatsapp business api
+
+
 
 ## video demo-
 https://clipchamp.com/watch/J19DRGi6FIt
@@ -11,7 +14,10 @@ https://github.com/Anurag-Raut/wgpt/assets/102049482/070324b4-5bf9-4275-aa2b-5ae
 
 
 ## setup
-to use this code add .env file with folowing structure-
+
+setup sandbox by folowing- https://www.twilio.com/docs/whatsapp/sandbox
+
+to use this code add .env file with following structure-
 ```
 TWILIO_ACCOUNT_SID="twilio account sid"
 TWILIO_AUTH_TOKEN="twilio auth token"
