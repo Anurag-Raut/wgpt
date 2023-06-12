@@ -1,6 +1,6 @@
 # wgpt
 A whatsapp js bot which uses open AI api which responds with Chat gpt response .
-used twiio for interacting with whatsapp business api
+used twilio for interacting with whatsapp business api
 
 
 
